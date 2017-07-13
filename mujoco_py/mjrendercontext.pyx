@@ -259,3 +259,23 @@ class MjRenderContextWindow(MjRenderContext):
         glfw.make_context_current(self.window)
         super().render(*glfw.get_framebuffer_size(self.window))
         glfw.swap_buffers(self.window)
+
+class MyGLFWMjRenderContext(MjRenderContext):
+
+    def __init__(self, MjSim sim):
+        super().__init__(sim, offscreen=True)
+
+        assert isinstance(self._opengl_context, GlfwContext), (
+            "Only GlfwContext supported for windowed rendering")
+
+    @property
+    def window(self):
+        return self._opengl_context.window
+
+    def render(self, width, height, camera_id=None):
+        if self.window is None or glfw.window_should_close(self.window):
+            return
+
+        glfw.make_context_current(self.window)
+        super().render(width, height, camera_id)
+        glfw.swap_buffers(self.window)
