@@ -2,6 +2,7 @@ import os
 import sys
 from abc import ABCMeta, abstractmethod
 from mujoco_py.utils import discover_mujoco
+import glfw
 
 
 def _add_mujoco_bin_to_dyld_library_path():
@@ -47,6 +48,7 @@ class GlfwContext(OpenGLContext):
         self._height = self._INIT_HEIGHT
         self.window = self._create_window(offscreen)
         self._set_window_size(self._width, self._height)
+        glfw.swap_interval(0)
 
     @staticmethod
     def _init_glfw():
@@ -77,7 +79,7 @@ class GlfwContext(OpenGLContext):
         if offscreen:
             print("Creating offscreen glfw")
             glfw.window_hint(glfw.VISIBLE, 0)
-            glfw.window_hint(glfw.DOUBLEBUFFER, 0)
+            glfw.window_hint(glfw.DOUBLEBUFFER, 1)
             init_width, init_height = self._INIT_WIDTH, self._INIT_HEIGHT
         else:
             print("Creating window glfw")
@@ -121,8 +123,10 @@ class GlfwContext(OpenGLContext):
 
 class OffscreenOpenGLContext():
 
-    def __init__(self, device_id):
-        self.device_id = device_id
+    def __init__(self):
+        # TODO: support GPU rendering on mac
+        # TODO: allow user to pick GPU expilictly from code
+        device_id = int(os.getenv('CUDA_VISIBLE_DEVICES', '0').split(',')[0])
         res = initOpenGL(device_id)
         if res != 1:
             raise RuntimeError("Failed to initialize OpenGL")
@@ -132,9 +136,10 @@ class OffscreenOpenGLContext():
         closeOpenGL()
 
     def make_context_current(self):
-        makeOpenGLContextCurrent(self.device_id)
+        # TODO: maybe expose this explicitly?
+        pass
 
     def set_buffer_size(self, int width, int height):
-        res = setOpenGLBufferSize(self.device_id, width, height)
+        res = setOpenGLBufferSize(width, height)
         if res != 1:
             raise RuntimeError("Failed to set buffer size")
