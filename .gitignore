@@ -47,3 +47,6 @@ outputfile
 tmp*
 cymj.c
 **/.git
+build/
+.dropbox
+Icon*
